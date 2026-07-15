@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Pietro in bici</title>
+
+  <!-- Font titoli -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <!-- Leaflet (mappa) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <div id="config-warning" hidden>
+    ⚠️ Configura <code>config.js</code> con URL e chiave di Supabase per far funzionare il sito.
+  </div>
+
+  <header class="hero">
+    <nav class="nav">
+      <a href="#mappa">Mappa</a>
+      <a href="#galleria">Galleria</a>
+      <a href="#diario">Diario</a>
+    </nav>
+    <h1 id="titolo">Pietro in bici 🚴</h1>
+    <p id="sottotitolo">Tre settimane su due ruote</p>
+  </header>
+
+  <main>
+    <!-- ===================== MAPPA ===================== -->
+    <section id="mappa" class="section">
+      <div class="section-head">
+        <h2>🗺️ Dove si trova</h2>
+        <span id="last-update" class="muted"></span>
+      </div>
+      <div id="map"></div>
+    </section>
+
+    <!-- ===================== GALLERIA ===================== -->
+    <section id="galleria" class="section">
+      <div class="section-head">
+        <h2>📷 Galleria</h2>
+      </div>
+
+      <form id="photo-form" class="card upload">
+        <label class="file-drop">
+          <input type="file" id="photo-input" accept="image/*,.heic,.heif" multiple hidden>
+          <span>➕ Carica foto (dal telefono di Pietro)</span>
+        </label>
+        <input type="text" id="photo-caption" placeholder="Didascalia (opzionale)…">
+        <button type="submit" id="photo-submit">Carica</button>
+        <p id="photo-status" class="status"></p>
+      </form>
+
+      <div id="gallery" class="gallery"></div>
+    </section>
+
+    <!-- ===================== DIARIO ===================== -->
+    <section id="diario" class="section">
+      <div class="section-head">
+        <h2>📔 Diario di bordo</h2>
+      </div>
+
+      <form id="diary-form" class="card diary-form">
+        <input type="text" id="diary-title" placeholder="Titolo (opzionale)…">
+        <textarea id="diary-body" rows="4" placeholder="Racconta la giornata…" required></textarea>
+        <button type="submit">Pubblica</button>
+        <p id="diary-status" class="status"></p>
+      </form>
+
+      <div id="diary-list" class="diary-list"></div>
+    </section>
+  </main>
+
+  <footer>
+    <p class="muted">Fatto con ❤️ per Pietro · buon viaggio!</p>
+  </footer>
+
+  <!-- Librerie -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/exifr@7.1.3/dist/full.umd.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
+
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
