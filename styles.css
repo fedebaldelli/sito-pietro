@@ -92,6 +92,11 @@ button {
 }
 button:hover { background: var(--accent-dark); }
 button:disabled { opacity: .55; cursor: default; }
+button.secondary {
+  background: #fff; color: var(--accent); border: 1.5px solid var(--accent);
+}
+button.secondary:hover { background: #d1603d12; }
+button.secondary.active { background: var(--accent); color: #fff; }
 
 .status { flex-basis: 100%; margin: .2rem 0 0; font-size: .88rem; color: var(--muted); }
 

@@ -164,6 +164,41 @@ async function loadPhotos() {
   });
 }
 
+// posizionamento manuale foto sulla mappa
+let manualLatLng = null, pickMarker = null, picking = false;
+const pickBtn = document.getElementById("pick-location");
+
+pickBtn.addEventListener("click", () => {
+  picking = !picking;
+  pickBtn.classList.toggle("active", picking);
+  document.getElementById("map").style.cursor = picking ? "crosshair" : "";
+  if (picking) {
+    pickBtn.textContent = "📍 Clicca sul punto della mappa…";
+    document.getElementById("mappa").scrollIntoView({ behavior: "smooth" });
+  } else {
+    pickBtn.textContent = manualLatLng ? "📍 Posizione scelta ✓" : "📍 Posiziona sulla mappa";
+  }
+});
+
+map.on("click", (e) => {
+  if (!picking) return;
+  manualLatLng = [e.latlng.lat, e.latlng.lng];
+  if (pickMarker) pickMarker.setLatLng(e.latlng);
+  else pickMarker = L.marker(e.latlng, { icon: photoIcon }).addTo(map);
+  pickMarker.bindPopup("📷 Qui verranno posizionate le foto che carichi").openPopup();
+  picking = false;
+  pickBtn.classList.remove("active");
+  pickBtn.textContent = "📍 Posizione scelta ✓ (clicca per cambiare)";
+  document.getElementById("map").style.cursor = "";
+});
+
+async function getLastKnownLocation() {
+  if (!sb) return null;
+  const { data } = await sb.from("locations")
+    .select("lat, lon").order("recorded_at", { ascending: false }).limit(1);
+  return data && data[0] ? [data[0].lat, data[0].lon] : null;
+}
+
 // selezione file
 const photoInput = document.getElementById("photo-input");
 const fileDrop = document.querySelector(".file-drop span");
@@ -202,6 +237,12 @@ document.getElementById("photo-form").addEventListener("submit", async (e) => {
   document.getElementById("photo-caption").value = "";
   document.querySelector(".file-drop").classList.remove("has-files");
   fileDrop.textContent = "➕ Carica foto (dal telefono di Pietro)";
+
+  // reset posizione manuale
+  manualLatLng = null;
+  if (pickMarker) { pickMarker.remove(); pickMarker = null; }
+  pickBtn.textContent = "📍 Posiziona sulla mappa";
+
   loadPhotos();
 });
 
@@ -216,6 +257,15 @@ async function uploadPhoto(file, caption) {
       if (takenAt) takenAt = new Date(takenAt).toISOString();
     }
   } catch (_) { /* niente EXIF, pazienza */ }
+
+  // 1b) se la foto non ha GPS: usa il punto scelto a mano, o l'ultima posizione di Pietro
+  if (lat == null) {
+    if (manualLatLng) { [lat, lon] = manualLatLng; }
+    else {
+      const last = await getLastKnownLocation();
+      if (last) { [lat, lon] = last; }
+    }
+  }
 
   // 2) converti HEIC → JPEG se serve
   let uploadBlob = file;
