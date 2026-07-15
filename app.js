@@ -113,6 +113,8 @@ async function loadLocations() {
 }
 
 /* ---------------------- GALLERIA ---------------------- */
+let galleryPhotos = [];
+
 async function loadPhotos() {
   const gallery = document.getElementById("gallery");
   if (!sb) { gallery.innerHTML = `<p class="empty">Nessuna foto ancora.</p>`; return; }
@@ -133,7 +135,9 @@ async function loadPhotos() {
     return;
   }
 
-  gallery.innerHTML = data.map((p) => {
+  galleryPhotos = data;
+
+  gallery.innerHTML = data.map((p, i) => {
     const when = p.taken_at ? fmtDateTime(p.taken_at) : "data sconosciuta";
     const where = p.place
       ? p.place
@@ -143,7 +147,7 @@ async function loadPhotos() {
       : (where ? `📍 ${where}` : "");
     return `
       <figure class="photo-card">
-        <img src="${p.url}" loading="lazy" alt="${p.caption || "foto"}">
+        <img src="${p.url}" loading="lazy" alt="${p.caption || "foto"}" data-index="${i}">
         <figcaption class="photo-meta">
           ${p.caption ? `<p class="cap">${escapeHtml(p.caption)}</p>` : ""}
           <p class="info">🕑 ${when}</p>
@@ -310,6 +314,56 @@ async function reverseGeocode(lat, lon) {
     return [city, a.country].filter(Boolean).join(", ") || j.display_name || null;
   } catch (_) { return null; }
 }
+
+/* ---------------------- LIGHTBOX ---------------------- */
+const lb = document.getElementById("lightbox");
+const lbImg = document.getElementById("lb-img");
+const lbCaption = document.getElementById("lb-caption");
+let lbIndex = 0;
+
+function openLightbox(i) {
+  lbIndex = i;
+  const p = galleryPhotos[i];
+  if (!p) return;
+  lbImg.src = p.url;
+  const when = p.taken_at ? fmtDateTime(p.taken_at) : "data sconosciuta";
+  const where = p.place || (p.lat != null ? `${p.lat.toFixed(3)}, ${p.lon.toFixed(3)}` : "");
+  lbCaption.innerHTML =
+    (p.caption ? `<div>${escapeHtml(p.caption)}</div>` : "") +
+    `<div class="lb-info">🕑 ${when}${where ? " · 📍 " + escapeHtml(where) : ""}` +
+    ` · ${lbIndex + 1}/${galleryPhotos.length}</div>`;
+  lb.hidden = false;
+  document.body.style.overflow = "hidden";
+}
+function closeLightbox() {
+  lb.hidden = true;
+  lbImg.src = "";
+  document.body.style.overflow = "";
+}
+function lbStep(dir) {
+  const n = galleryPhotos.length;
+  if (n === 0) return;
+  openLightbox((lbIndex + dir + n) % n);
+}
+
+// apri cliccando una foto della galleria
+document.getElementById("gallery").addEventListener("click", (e) => {
+  const img = e.target.closest("img[data-index]");
+  if (img) openLightbox(Number(img.dataset.index));
+});
+// controlli
+lb.querySelector(".lb-close").addEventListener("click", closeLightbox);
+lb.querySelector(".lb-prev").addEventListener("click", () => lbStep(-1));
+lb.querySelector(".lb-next").addEventListener("click", () => lbStep(1));
+// click sullo sfondo (fuori dalla foto) = chiudi
+lb.addEventListener("click", (e) => { if (e.target === lb) closeLightbox(); });
+// tastiera
+document.addEventListener("keydown", (e) => {
+  if (lb.hidden) return;
+  if (e.key === "Escape") closeLightbox();
+  else if (e.key === "ArrowLeft") lbStep(-1);
+  else if (e.key === "ArrowRight") lbStep(1);
+});
 
 /* ---------------------- DIARIO ---------------------- */
 async function loadDiary() {

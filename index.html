@@ -83,6 +83,17 @@
     <p class="muted">Fatto con ❤️ per Pietro · buon viaggio!</p>
   </footer>
 
+  <!-- Lightbox foto -->
+  <div id="lightbox" class="lightbox" hidden>
+    <button class="lb-btn lb-close" aria-label="Chiudi">✕</button>
+    <button class="lb-btn lb-prev" aria-label="Precedente">‹</button>
+    <figure class="lb-figure">
+      <img id="lb-img" src="" alt="">
+      <figcaption id="lb-caption" class="lb-caption"></figcaption>
+    </figure>
+    <button class="lb-btn lb-next" aria-label="Successiva">›</button>
+  </div>
+
   <!-- Librerie -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
