@@ -8,7 +8,7 @@ window.APP_CONFIG = {
   TITOLO: "Pietro in bici 🚴",
   SOTTOTITOLO: "Tre settimane su due ruote — seguilo qui",
 
-  // Itinerario previsto: metti un file .gpx nella cartella e scrivi qui il nome.
-  // Lascia "" (vuoto) se non vuoi mostrarlo.
-  PERCORSO_GPX: "percorso.gpx",
+  // Itinerario previsto: una o più tratte .gpx (disegnate tratteggiate sulla mappa).
+  // Per aggiungerne/toglierne, modifica questa lista. Lascia [] per non mostrarlo.
+  PERCORSI_GPX: ["Roma-Ancona.gpx", "da-Spalato-a-Istanbul.gpx"],
 };

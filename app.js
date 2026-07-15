@@ -20,14 +20,15 @@ if (configured) {
 }
 
 /* ---------------------- MAPPA ---------------------- */
-const map = L.map("map").setView([45.0, 9.0], 5);
+const map = L.map("map", { preferCanvas: true }).setView([45.0, 9.0], 5);
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
   attribution: "© OpenStreetMap",
   maxZoom: 19,
 }).addTo(map);
 
 let routeLine = null;
-let plannedLine = null;
+const plannedLines = [];
+let plannedBounds = null;
 let liveMarker = null;
 const photoMarkers = [];
 
@@ -52,24 +53,33 @@ const photoIcon = L.divIcon({
   iconSize: [24, 24], iconAnchor: [12, 12],
 });
 
-// Itinerario previsto (file GPX)
+// Itinerario previsto (una o più tratte GPX)
 async function loadPlannedRoute() {
-  const path = cfg.PERCORSO_GPX;
-  if (!path) return;
-  try {
-    const r = await fetch(path);
-    if (!r.ok) return; // file non presente: pazienza
-    const xml = new DOMParser().parseFromString(await r.text(), "application/xml");
-    const pts = [...xml.querySelectorAll("trkpt, rtept")]
-      .map((p) => [parseFloat(p.getAttribute("lat")), parseFloat(p.getAttribute("lon"))])
-      .filter((p) => !isNaN(p[0]) && !isNaN(p[1]));
-    if (pts.length === 0) return;
+  const paths = cfg.PERCORSI_GPX || (cfg.PERCORSO_GPX ? [cfg.PERCORSO_GPX] : []);
+  if (paths.length === 0) return;
 
-    plannedLine = L.polyline(pts, {
-      color: "#4a6fa5", weight: 3, opacity: 0.75, dashArray: "8 8",
-    }).addTo(map).bindPopup("Itinerario previsto");
-    map.fitBounds(plannedLine.getBounds(), { padding: [40, 40] });
-  } catch (e) { console.error("GPX:", e); }
+  for (const path of paths) {
+    try {
+      const r = await fetch(path);
+      if (!r.ok) continue; // file non presente: pazienza
+      const xml = new DOMParser().parseFromString(await r.text(), "application/xml");
+      const pts = [...xml.querySelectorAll("trkpt, rtept")]
+        .map((p) => [parseFloat(p.getAttribute("lat")), parseFloat(p.getAttribute("lon"))])
+        .filter((p) => !isNaN(p[0]) && !isNaN(p[1]));
+      if (pts.length === 0) continue;
+
+      const line = L.polyline(pts, {
+        color: "#4a6fa5", weight: 3, opacity: 0.75, dashArray: "8 8",
+      }).addTo(map).bindPopup("Itinerario previsto");
+      plannedLines.push(line);
+
+      plannedBounds = plannedBounds
+        ? plannedBounds.extend(line.getBounds())
+        : line.getBounds();
+    } catch (e) { console.error("GPX:", e); }
+  }
+
+  if (plannedBounds) map.fitBounds(plannedBounds, { padding: [40, 40] });
 }
 
 async function loadLocations() {
@@ -95,7 +105,7 @@ async function loadLocations() {
                (last.battery != null ? `<br>🔋 ${last.battery}%` : ""));
 
   const bounds = routeLine.getBounds();
-  if (plannedLine) bounds.extend(plannedLine.getBounds());
+  if (plannedBounds) bounds.extend(plannedBounds);
   map.fitBounds(bounds, { padding: [40, 40], maxZoom: 13 });
 
   const upd = document.getElementById("last-update");
