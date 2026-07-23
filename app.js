@@ -147,7 +147,11 @@ async function loadPhotos() {
       : (where ? `📍 ${where}` : "");
     return `
       <figure class="photo-card">
-        <img src="${p.url}" loading="lazy" alt="${p.caption || "foto"}" data-index="${i}">
+        <div class="photo-wrap">
+          <img src="${p.url}" loading="lazy" alt="${p.caption || "foto"}" data-index="${i}">
+          <button class="photo-del" data-id="${p.id}" data-url="${p.url}"
+                  title="Elimina questa foto" aria-label="Elimina foto">🗑</button>
+        </div>
         <figcaption class="photo-meta">
           ${p.caption ? `<p class="cap">${escapeHtml(p.caption)}</p>` : ""}
           <p class="info">🕑 ${when}</p>
@@ -314,6 +318,43 @@ async function reverseGeocode(lat, lon) {
     return [city, a.country].filter(Boolean).join(", ") || j.display_name || null;
   } catch (_) { return null; }
 }
+
+/* ---------------------- ELIMINA FOTO ---------------------- */
+// dall'URL pubblico ricava il nome del file nello storage
+function storagePathFromUrl(url) {
+  const parts = String(url).split("/object/public/photos/");
+  return parts[1] ? decodeURIComponent(parts[1]) : null;
+}
+
+document.getElementById("gallery").addEventListener("click", async (e) => {
+  const btn = e.target.closest(".photo-del");
+  if (!btn || !sb) return;
+  e.stopPropagation();
+
+  if (!confirm("Vuoi eliminare questa foto?\n\nL'operazione non è reversibile.")) return;
+  btn.disabled = true;
+
+  // 1) cancella il file dallo storage
+  const path = storagePathFromUrl(btn.dataset.url);
+  if (path) {
+    const { error } = await sb.storage.from("photos").remove([path]);
+    if (error) console.warn("Storage:", error.message);
+  }
+
+  // 2) cancella la riga dal database (.select() ci dice se è stata davvero rimossa)
+  const { data, error } = await sb.from("photos")
+    .delete().eq("id", Number(btn.dataset.id)).select();
+
+  if (error || !data || data.length === 0) {
+    btn.disabled = false;
+    alert("Non è stato possibile eliminare la foto.\n\n" +
+          "Probabilmente manca il permesso di cancellazione su Supabase " +
+          "(va eseguita la riga SQL indicata nel README).");
+    return;
+  }
+
+  loadPhotos();
+});
 
 /* ---------------------- LIGHTBOX ---------------------- */
 const lb = document.getElementById("lightbox");

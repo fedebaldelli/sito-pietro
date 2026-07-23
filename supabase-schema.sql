@@ -49,12 +49,14 @@ drop policy if exists "read photos"    on photos;
 drop policy if exists "read diary"     on diary;
 drop policy if exists "insert photos"  on photos;
 drop policy if exists "insert diary"   on diary;
+drop policy if exists "delete photos"  on photos;
 
 create policy "read locations" on locations for select using (true);
 create policy "read photos"    on photos    for select using (true);
 create policy "read diary"     on diary     for select using (true);
 create policy "insert photos"  on photos    for insert with check (true);
 create policy "insert diary"   on diary     for insert with check (true);
+create policy "delete photos"  on photos    for delete using (true);
 
 -- ---------- STORAGE (bucket foto pubblico) ----------
 
@@ -64,9 +66,13 @@ on conflict (id) do nothing;
 
 drop policy if exists "read photos storage"   on storage.objects;
 drop policy if exists "upload photos storage" on storage.objects;
+drop policy if exists "delete photos storage" on storage.objects;
 
 create policy "read photos storage" on storage.objects
   for select using (bucket_id = 'photos');
 
 create policy "upload photos storage" on storage.objects
   for insert to anon with check (bucket_id = 'photos');
+
+create policy "delete photos storage" on storage.objects
+  for delete to anon using (bucket_id = 'photos');
