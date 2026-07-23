@@ -6,7 +6,7 @@ window.APP_CONFIG = {
 
   // Testo mostrato in cima al sito
   TITOLO: "Pietro in bici 🚴",
-  SOTTOTITOLO: "Roma - Instanbul",
+  SOTTOTITOLO: "Roma - Istanbul",
 
   // Itinerario previsto: una o più tratte .gpx (disegnate tratteggiate sulla mappa).
   // Per aggiungerne/toglierne, modifica questa lista. Lascia [] per non mostrarlo.
